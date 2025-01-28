@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VPN Sessions Dashboard</title>
+  <style>
+      body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          margin: 20px;
+          background-color: #f5f5f5;
+      }
+      .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          background-color: white;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+          color: #333;
+          margin-bottom: 20px;
+      }
+      table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+      }
+      th, td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+      }
+      th {
+          background-color: #f8f9fa;
+          font-weight: 600;
+      }
+      tr:hover {
+          background-color: #f8f9fa;
+      }
+      .expand-btn {
+          cursor: pointer;
+          color: #0066cc;
+          user-select: none;
+      }
+      .details-row {
+          display: none;
+          background-color: #f8f9fa;
+      }
+      .details-content {
+          padding: 15px;
+      }
+      .status-active {
+          color: #28a745;
+          font-weight: 500;
+      }
+      .status-expired {
+          color: #dc3545;
+          font-weight: 500;
+      }
+      .detail-grid {
+          display: grid;
+          /*grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));*/
+          grid-template-columns: repeat(4, 1fr);
+          gap: 15px;
+      }
+
+      .detail-item.large {
+          grid-column: span 2;
+      }
+
+      /* Small sections that span 1 column each */
+      .detail-item.small {
+          grid-column: span 1;
+      }
+
+      .detail-item {
+          padding: 8px;
+          background-color: white;
+          border-radius: 4px;
+          border: 1px solid #dee2e6;
+      }
+      .detail-label {
+          font-weight: 500;
+          color: #666;
+          margin-bottom: 4px;
+      }
+
+      .copy-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          background: #fff;
+          cursor: pointer;
+          transition: background 0.2s;
+      }
+
+      .copy-btn:hover {
+          background: #f5f5f5;
+      }
+
+      .copy-icon {
+          flex-shrink: 0;
+          stroke: currentColor;
+          stroke-width: 2;
+          fill: none;
+      }
+
+      .code-block {
+          font-family: monospace;
+          background-color: #f6f8fa;
+          padding: 2px 4px;
+          border-radius: 3px;
+      }
+  </style>
+</head>
+<body>
+<svg style="display: none;">
+  <symbol id="copy-icon" viewBox="0 0 24 24">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+  </symbol>
+</svg>
+<div class="container">
+  <h1>VPN Sessions Dashboard</h1>
+  <div id="underheader"></div>
+  <table id="sessions-table">
+    <thead>
+    <tr>
+      <th></th>
+      <th>Session ID</th>
+      <th>Username</th>
+      <th>Start Time</th>
+      <th>Status</th>
+      <th>TX / RX Bytes</th>
+    </tr>
+    </thead>
+    <tbody id="sessions-body">
+    <!-- Data will be populated by JavaScript -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+    // Sample data (in production, this would come from your backend)
+    const debug_data = {
+        "sessions": [],
+        "server_name": "test-1"
+    };
+
+    const toggleStatus = {};
+
+    function formatDateTime(dateStr) {
+        const now = new Date();
+        const date = new Date(dateStr);
+        const isFuture = date > now;
+
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // +1 because months are 0-based
+        const year = date.getFullYear();
+        const diff = Math.abs(date - now);
+
+        const diffInSeconds = Math.abs(Math.floor((date - now) / 1000));
+        let relativeTime = '';
+        if (diffInSeconds < 60) {
+            // Less than a minute
+            relativeTime = `${diffInSeconds}s`;
+        } else if (diffInSeconds < 3600) {
+            // Less than an hour
+            const m = Math.floor(diffInSeconds / 60);
+            const s = diffInSeconds % 60;
+            relativeTime = s > 0 ? `${m}m${s}s` : `${m}m`;
+        } else if (diffInSeconds < 86400) {
+            // Less than a day
+            const h = Math.floor(diffInSeconds / 3600);
+            const m = Math.floor((diffInSeconds % 3600) / 60);
+            const s = diffInSeconds % 60;
+            relativeTime = `${h}h${m > 0 ? `${m}m` : ''}${s > 0 ? `${s}s` : ''}`;
+        } else {
+            // Days
+            const d = Math.floor(diffInSeconds / 86400);
+            const h = Math.floor((diffInSeconds % 86400) / 3600);
+            const m = Math.floor((diffInSeconds % 3600) / 60);
+            const s = diffInSeconds % 60;
+            relativeTime = `${d}d${h > 0 ? `${h}h` : ''}${m > 0 ? `${m}m` : ''}${s > 0 ? `${s}s` : ''}`;
+        }
+
+        const timeString = `${hours}:${minutes}:${seconds} ${day}.${month}.${year}`;
+        const suffix = isFuture ? `in ${relativeTime}` : `${relativeTime} ago`;
+
+        return `${timeString} (${suffix})`;
+    }
+
+    function getSessionStatus(session) {
+        const now = new Date();
+        const expireTime = new Date(session.expire_time);
+        return now < expireTime ?
+            '<span class="status-active">Active</span>' :
+            '<span class="status-expired">Expired</span>';
+    }
+
+    function createDetailsContentOld(session) {
+        return `
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Client Public Key</div>
+                        <div>${session.client_public_key || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Next Hop Server Key</div>
+                        <div>${session.next_hop_server_public_key || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">MTU</div>
+                        <div>${session.mtu || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">DNS Servers</div>
+                        <div>IPv4: ${session.dns4 || 'N/A'}<br>IPv6: ${session.dns6 || 'N/A'}</div>
+                    </div>
+
+                </div>
+            `;
+    }
+
+    function createDetailsContent(session) {
+        return `
+        <div class="detail-grid">
+            <div class="detail-item large">
+                <div class="detail-label">Incoming connection</div>
+                <div>
+                    Client key: <span class="code-block">${session.server_profile.client_public_key}</span><br>
+                    Server key: <span class="code-block">${session.server_profile.server_public_key}</span><br>
+                    IPv4: <span class="code-block">${session.server_profile.internal_ip4}</span><br>
+                    IPv6: <span class="code-block">${session.server_profile.internal_ip6}</span>
+                </div>
+            </div>
+            <div class="detail-item large">
+                <div class="detail-label">Outgoing connection</div>
+                <div>
+                    Server endpoint: <span class="code-block">${session.client_profile.server_ip}:${session.client_profile.server_port}</span><br>
+                    Client key: <span class="code-block">${session.client_profile.client_public_key}</span><br>
+                    Server key: <span class="code-block">${session.client_profile.server_public_key}</span><br>
+                    IPv4: <span class="code-block">${session.client_profile.internal_ip4}</span><br>
+                    IPv6: <span class="code-block">${session.client_profile.internal_ip6}</span><br>
+                    Next hops: <div>${session.next_hops.map((h)=>`<a href=${h}>${h}</a>`).join('<br>')}</div>
+                </div>
+            </div>
+            <div class="detail-item large">
+                <div class="detail-label">Time</div>
+                Start time: <div>${formatDateTime(session.start_time)}</div>
+                Update time: <div>${formatDateTime(session.update_time)}</div>
+                Expire time: <div>${formatDateTime(session.expire_time)}</div>
+            </div>
+            <div class="detail-item small">
+                <div class="detail-label">Traffic Stats</div>
+                <div>
+                    TX: ${session.tx_bytes} bytes (${session.tx_packets} packets)<br>
+                    RX: ${session.rx_bytes} bytes (${session.rx_packets} packets)
+                </div>
+            </div>
+            <div class="detail-item small">
+                <div class="detail-label">Network Settings</div>
+                <div>
+                    MTU: ${session.mtu}<br>
+                    Keepalive: ${session.persistent_keepalive_interval}s<br>
+                    DNS4: <span class="code-block">${session.dns4}</span><br>
+                    DNS6: <span class="code-block">${session.dns6}</span>
+                </div>
+            </div>
+
+        </div>
+    `;
+    }
+
+    function toggleDetails(rowId) {
+        const detailsRow = document.getElementById(`details-${rowId}`);
+        const currentDisplay = detailsRow.style.display;
+        detailsRow.style.display = currentDisplay === 'table-row' ? 'none' : 'table-row';
+
+        toggleStatus[rowId] = detailsRow.style.display;
+    }
+
+    function populateTable(data) {
+        const server_name = data.server_name;
+        const sessions = data.sessions;
+
+        // set window title
+        document.title = `${server_name}`;
+
+        const underheader = document.getElementById('underheader');
+        underheader.innerHTML = `<h2>Server: ${server_name}</h2>`;
+
+        const tbody = document.getElementById('sessions-body');
+        tbody.innerHTML = '';
+        sessions.forEach(session => {
+            // Main row
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td><span class="expand-btn" onclick="toggleDetails('${session.id}')">➕</span></td>
+                    <td>${session.id}</td>
+                    <td>${session.username}</td>
+                    <td>${formatDateTime(session.start_time)}</td>
+                    <td>${getSessionStatus(session)}</td>
+                    <td>
+                        ${session.tx_bytes} / ${session.rx_bytes}
+                    </td>
+                `;
+            tbody.appendChild(row);
+
+            // Details row
+            const detailsRow = document.createElement('tr');
+            detailsRow.id = `details-${session.id}`;
+            detailsRow.className = 'details-row';
+            detailsRow.style.display = toggleStatus[session.id] || 'none';
+            detailsRow.innerHTML = `
+                    <td colspan="6">
+                        <div class="details-content">
+                            ${createDetailsContent(session)}
+                        </div>
+                    </td>
+                `;
+            tbody.appendChild(detailsRow);
+        });
+    }
+
+    function updateData() {
+        console.log('Fetching data...');
+        fetch('/admin/api/status')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Data received');
+                populateTable(data);
+            })
+            .catch(error => {
+                const tbody = document.getElementById('sessions-body');
+                tbody.innerHTML = '';
+
+                const underheader = document.getElementById('underheader');
+                underheader.innerHTML = `<h2>Error loading data</h2>`;
+
+                console.error('Error:', error);
+            });
+    }
+
+    // Initialize the table when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        if (false) {
+            populateTable(debug_data);
+        } else {
+            updateData();
+            setInterval(updateData, 5000);
+        }
+    });
+</script>
+</body>
+</html>

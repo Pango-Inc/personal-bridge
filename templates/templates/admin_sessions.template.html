@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin</title>
+  <style>
+      table {
+          border-collapse: collapse;
+          width: 100%;
+          font-family: -apple-system, system-ui, sans-serif;
+      }
+      th, td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+      }
+      th {
+          background-color: #f8f9fa;
+          font-weight: 500;
+      }
+      tr:hover {
+          background-color: #f5f5f5;
+      }
+  </style>
+</head>
+<body>
+  <h1>Session list</h1>
+  <table>
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Start time</th>
+      <th>Update time</th>
+      <th>Expire time</th>
+      <th>TX/RX</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{- /*gotype: vpnlite.AdminSessionsTemplateParams*/ -}}
+    {{range .Sessions }}
+      <tr>
+        <td>{{ .Id }}</td>
+        <td>{{ .Username }}</td>
+        <td>{{ .StartTime | format_time }}</td>
+        <td>{{ .UpdateTime | format_time }}</td>
+        <td>{{ .ExpireTime | format_time }}</td>
+        <td>
+            {{ .TxPackets }} / {{ .RxPackets }} packets<br />
+            {{ .TxBytes }} / {{ .RxBytes }} bytes
+        </td>
+      </tr>
+    {{end}}
+  </table>
+</body>
+</html>
