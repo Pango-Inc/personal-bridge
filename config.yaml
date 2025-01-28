@@ -1,0 +1,30 @@
+# config example
+logging:
+  level: debug # debug, info, warn, error
+  format: text # text, json
+api:
+  server_name: "testserver"
+  listen:
+    - addr: ":8080"
+# additional ports can be configured, TLS can be configured
+#    - addr: ":443"
+#      tls:
+#        acme:
+#          cache_dir: /tmp/acme
+#          domains: ["testserver.example.com"]
+#    - addr: ":443"
+#      tls:
+#        static:
+#          crt: /tmp/cert.pem
+#          key: /tmp/key.pem
+
+wireguard:
+  # configuration for wireguard server
+  server:
+    listen_port: 51820
+    # subnet for wireguard clients, if subnet6 is not specified, only IPv4 will work
+    subnet4: 10.234.0.0/16
+    subnet6: fd00:0:1:2::/64
+    # new private key will be automatically generated and saved if file does not exist
+    private_key_file: /tmp/wireguard/server.key
+  client: {}

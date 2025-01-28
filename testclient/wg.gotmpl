@@ -1,0 +1,11 @@
+{{- /*gotype: pbridge/testclient.WireguardConfigParams*/ -}}
+[Interface]
+Address = {{.ConnectResponse.InternalIP}}/32{{if .ConnectResponse.InternalIP6}}, {{.ConnectResponse.InternalIP6}}/128{{end}}
+PrivateKey = {{.ClientPrivateKey}}
+DNS = {{.ConnectResponse.DNS}}
+MTU = {{.ConnectResponse.MTU}}
+[Peer]
+PublicKey = {{.ConnectResponse.ServerPublicKey}}
+Endpoint = {{.ConnectResponse.ConnectIP}}:{{.ConnectResponse.ConnectPort}}
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = {{.ConnectResponse.PersistentKeepaliveInterval}}
