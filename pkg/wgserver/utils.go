@@ -48,10 +48,9 @@ func GetDefaultIPs() (ip4 net.IP, ip6 net.IP, err error) {
 
 	route6, err := netlink.RouteGet(testExternalIPv6)
 	if err == nil {
-		return nil, nil, fmt.Errorf("failed to get default route: %w", err)
-	}
-	if len(route6) > 0 {
-		ip6 = route6[0].Src
+		if len(route6) > 0 {
+			ip6 = route6[0].Src
+		}
 	}
 
 	if ip4 == nil {
