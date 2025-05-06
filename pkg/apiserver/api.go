@@ -59,6 +59,7 @@ func New(cfg config.APIConfig, wgServer *wgserver.Service, wgClient *wgclient.Se
 	r := http.NewServeMux()
 	r.HandleFunc("POST /wireguard/connect", s.handleConnect)
 	r.HandleFunc("POST /wireguard/update", s.handleUpdate)
+	r.HandleFunc("POST /wireguard/watch", s.handleWatch)
 	r.HandleFunc("POST /wireguard/disconnect", s.handleDisconnect)
 
 	r.HandleFunc("/admin/login", s.handleAdminLogin)

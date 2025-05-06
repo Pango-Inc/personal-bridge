@@ -29,9 +29,28 @@ var ErrUnauthorized = &ApiError{
 	Result:   "UNAUTHORIZED",
 }
 
+// generic error
 var ErrForbidden = &ApiError{
 	HttpCode: http.StatusForbidden,
 	Result:   "FORBIDDEN",
+}
+
+// when next_hops are empty on personal bridge
+var ErrNotAnExitNode = &ApiError{
+	HttpCode: http.StatusForbidden,
+	Result:   "NOT_AN_EXIT_NODE",
+}
+
+// when number of next_hops bigger then configured limit
+var ErrTooManyHops = &ApiError{
+	HttpCode: http.StatusForbidden,
+	Result:   "TOO_MANY_HOPS",
+}
+
+// when one of next hops is not allowed to connect
+var ErrHopNotAllowed = &ApiError{
+	HttpCode: http.StatusForbidden,
+	Result:   "HOP_NOT_ALLOWED",
 }
 
 var ErrSessionNotFound = &ApiError{

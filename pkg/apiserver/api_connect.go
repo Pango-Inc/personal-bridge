@@ -56,12 +56,12 @@ func (s *Service) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	if len(request.NextHops) == 0 {
 		slog.Warn("no next_hops in connect request")
-		ErrForbidden.WithErrorMsg("It is not an exit node").Handle(w)
+		ErrNotAnExitNode.WithErrorMsg("It is not an exit node").Handle(w)
 		return
 	}
 	if len(request.NextHops) > s.cfg.GetMaxHops() {
 		slog.Warn("too many hops in connect request")
-		ErrForbidden.WithErrorMsg("Too many hops").Handle(w)
+		ErrTooManyHops.WithErrorMsg("Too many hops").Handle(w)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (s *Service) handleConnect(w http.ResponseWriter, r *http.Request) {
 	nextHopReq.Header.Set("Content-Type", "application/json")
 	nextHopReq.Header.Set("Accept", "application/json")
 	// Skip original IP address forwarding
-	//nextHopReq.Header.Set("X-Forwarded-For", getNextHeader(r))
+	// nextHopReq.Header.Set("X-Forwarded-For", getNextHeader(r))
 
 	// send request to next hop
 	nextHopResp, err := s.c.Do(nextHopReq)
