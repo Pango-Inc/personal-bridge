@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/cilium/ebpf v0.17.2
 	github.com/ghodss/yaml v1.0.0
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/henvic/httpretty v0.1.4
 	github.com/lmittmann/tint v1.0.7
 	github.com/stretchr/testify v1.9.0
